@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Γράμμος — 4ήμερη διαδρομή</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,sans-serif;color:#17221d}
+.app{display:grid;grid-template-columns:360px 1fr;height:100vh}.side{background:#fff;padding:20px;overflow:auto;border-right:1px solid #ddd}.brand{font-size:25px;font-weight:800}.sub{color:#66716b;margin:4px 0 18px}.row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.btn{border:1px solid #d7ddd9;background:#fff;border-radius:20px;padding:8px 11px;cursor:pointer}.btn.active{background:#17221d;color:#fff}.card{border:1px solid #e0e4e1;border-radius:14px;padding:12px;margin:9px 0;cursor:pointer}.card:hover{box-shadow:0 3px 15px #0001}.tag{font-size:12px;color:#69736d}.title{font-weight:750;margin:4px 0}.desc{font-size:13px;color:#59645e;line-height:1.4}.map{position:relative;overflow:hidden;background:#ddd}.tiles{position:absolute;inset:0;cursor:grab}.tiles.drag{cursor:grabbing}.tile{position:absolute;width:256px;height:256px}.pin{position:absolute;width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px #0006;transform:translate(-50%,-50%);cursor:pointer}.info{position:absolute;right:14px;bottom:14px;width:min(370px,calc(100% - 28px));background:white;padding:15px;border-radius:16px;box-shadow:0 4px 24px #0003;display:none}.info.show{display:block}.close{float:right;border:0;border-radius:50%;width:28px;height:28px}.controls{position:absolute;right:14px;top:14px;z-index:10;display:flex;gap:5px}.zoom{border:0;background:#fff;border-radius:9px;width:38px;height:38px;font-size:20px;box-shadow:0 2px 10px #0002}.note{font-size:11px;color:#7a847e;margin-top:12px}@media(max-width:800px){.app{grid-template-columns:1fr;grid-template-rows:48% 52%}.side{order:2}.map{order:1}}
+</style>
+</head>
+<body>
+<div class="app"><aside class="side"><div class="brand">Γράμμος</div><div class="sub">4ήμερο • OpenStreetMap</div>
+<div id="days" class="row"></div><div id="cats" class="row"></div><div id="cards"></div>
+<div class="note">Χάρτης: © OpenStreetMap contributors. Οι γραμμές είναι ενδεικτικές και όχι GPS tracks.</div></aside>
+<main class="map"><div id="tiles" class="tiles"></div><div class="controls"><button class="zoom" onclick="zoomBy(1)">+</button><button class="zoom" onclick="zoomBy(-1)">−</button></div><div id="info" class="info"><button class="close" onclick="info.classList.remove('show')">×</button><div id="infoBody"></div></div></main></div>
+<script>
+const places=[
+{id:1,day:1,cat:'Ιστορία',icon:'🟩',name:'Πάρκο Εθνικής Συμφιλίωσης',lat:40.365,lon:20.775,desc:'Στάση ιστορίας στην περιοχή Λιβάδια Κοτύλης.'},
+{id:2,day:1,cat:'Πεζοπορία',icon:'🟧',name:'Πύργος Κοτύλης',lat:40.352,lon:20.783,desc:'Δημοσιευμένη διαδρομή περίπου 1,95 km / 1 ώρα.'},
+{id:3,day:1,cat:'Φαγητό',icon:'🟪',name:'Νεστόριο',lat:40.410,lon:20.940,desc:'Βάση για φαγητό και ανεφοδιασμό.'},
+{id:4,day:2,cat:'Πεζοπορία',icon:'🟧',name:'Γράμμοστα',lat:40.340,lon:20.820,desc:'Αφετηρία για Γκιστόβα και 2520.'},
+{id:5,day:2,cat:'Πεζοπορία',icon:'🟧',name:'Λίμνη Γκιστόβα',lat:40.330,lon:20.800,desc:'Αλπική λίμνη. Η δημοσιευμένη διαδρομή είναι περίπου 7 km.'},
+{id:6,day:3,cat:'Κορυφή',icon:'🟥',name:'Τσούκα Πέτσικ / 2520',lat:40.325,lon:20.770,desc:'Η ψηλότερη κορυφή του Γράμμου.'},
+{id:7,day:4,cat:'Πεζοπορία',icon:'🟧',name:'Αρένες / Μουτσάλια',lat:40.360,lon:20.700,desc:'Δημοσιευμένη διαδρομή περίπου 6,44 km.'},
+{id:8,day:4,cat:'Διαμονή',icon:'🟪',name:'Γράμος',lat:40.342,lon:20.823,desc:'Προτεινόμενο σημείο διαμονής στην περιοχή.'}
+];
+let day=0,cat='Όλα',z=11,cx=20.80,cy=40.35,drag=false,sx=0,sy=0,scx=0,scy=0;
+const colors={'Ιστορία':'#2f7d4a','Πεζοπορία':'#d97706','Κορυφή':'#b42318','Φαγητό':'#7c3aed','Διαμονή':'#7c3aed'};
+function proj(lat,lon,Z=z){const n=2**Z,x=(lon+180)/360*n,y=(1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*n;return[x*256,y*256]}
+function centerPx(){return proj(cy,cx)}
+function tileURL(x,y){const n=2**z; x=((x%n)+n)%n; return `https://tile.openstreetmap.org/${z}/${x}/${y}.png`}
+function draw(){tiles.innerHTML='';const [ccx,ccy]=centerPx(),w=tiles.clientWidth,h=tiles.clientHeight;const left=ccx-w/2,top=ccy-h/2;
+for(let tx=Math.floor(left/256);tx<=Math.floor((left+w)/256);tx++)for(let ty=Math.floor(top/256);ty<=Math.floor((top+h)/256);ty++){const im=document.createElement('img');im.className='tile';im.src=tileURL(tx,ty);im.style.left=(tx*256-left)+'px';im.style.top=(ty*256-top)+'px';im.draggable=false;tiles.appendChild(im)}
+document.querySelectorAll('.pin').forEach(e=>e.remove());
+filtered().forEach(p=>{const [px,py]=proj(p.lat,p.lon),el=document.createElement('div');el.className='pin';el.style.background=colors[p.cat]||'#555';el.style.left=(px-left)+'px';el.style.top=(py-top)+'px';el.title=p.name;el.onclick=()=>focus(p.id);tiles.appendChild(el)});
+}
+function filtered(){return places.filter(p=>(day===0||p.day===day)&&(cat==='Όλα'||p.cat===cat))}
+function controls(){days.innerHTML='<button class="btn '+(!day?'active':'')+'" onclick="setDay(0)">Όλες</button>'+[1,2,3,4].map(d=>`<button class="btn ${day===d?'active':''}" onclick="setDay(${d})">Ημέρα ${d}</button>`).join('');cats.innerHTML=['Όλα','Ιστορία','Πεζοπορία','Κορυφή','Φαγητό','Διαμονή'].map(c=>`<button class="btn ${cat===c?'active':''}" onclick="setCat('${c}')">${c}</button>`).join('');cards.innerHTML=filtered().map(p=>`<div class="card" onclick="focus(${p.id})"><div class="tag">Ημέρα ${p.day} • ${p.icon} ${p.cat}</div><div class="title">${p.name}</div><div class="desc">${p.desc}</div></div>`).join('')}
+function focus(id){const p=places.find(x=>x.id===id);cx=p.lon;cy=p.lat;draw();infoBody.innerHTML=`<div class="tag">Ημέρα ${p.day} • ${p.icon} ${p.cat}</div><h2>${p.name}</h2><div>${p.desc}</div>`;info.classList.add('show')}
+function setDay(d){day=d;controls();draw()}function setCat(c){cat=c;controls();draw()}
+function zoomBy(d){z=Math.max(5,Math.min(17,z+d));draw()}
+tiles.onmousedown=e=>{drag=true;sx=e.clientX;sy=e.clientY;scx=cx;scy=cy;tiles.classList.add('drag')};
+window.onmouseup=()=>{drag=false;tiles.classList.remove('drag')};
+window.onmousemove=e=>{if(!drag)return;const dx=e.clientX-sx,dy=e.clientY-sy;const scale=256*2**z;cx=scx-dx/scale*360;cy=scy+dy/scale*180;draw()};
+window.onresize=draw;
+controls();draw();
+</script></body></html>
