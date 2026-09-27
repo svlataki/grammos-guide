@@ -293,12 +293,40 @@ html, body {
 }
 
 @media (max-width: 800px) {
+  /* Allow the app to scroll naturally on mobile */
+  html, body {
+    overflow: auto !important;
+  }
+
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: 45% 55%;
+    grid-template-rows: 350px auto; /* Set fixed height for map, auto height for sidebar */
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
-  .side { order: 2; }
-  .map { order: 1; }
+
+  /* Keep map fixed at top */
+  .map { 
+    order: 1; 
+    height: 350px; 
+  }
+
+  /* Place sidebar below map and let content scroll */
+  .side { 
+    order: 2; 
+    height: auto;
+    overflow: visible;
+    padding: 16px;
+  }
+
+  /* Ensure card container expands properly on small screens */
+  .cards-container {
+    flex: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 }
 </style>
 </head>
