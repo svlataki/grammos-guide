@@ -371,7 +371,7 @@ html, body {
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="places.js"></script>
 <script>
-  
+
 let currentDay = 0;
 let currentCat = 'Όλα';
 let markersGroup = [];
@@ -419,10 +419,6 @@ const imageBounds = [
   [40.0945, 20.6524], // South-West 
   [40.8284, 21.5868]  // North-East
 ];
-// const imageBounds = [
-//   [40.0945, 20.6324], // SW — shifted west
-//   [40.8284, 21.5668]  // NE — shifted west
-// ];
 
 
 const customMap = L.imageOverlay(
@@ -433,6 +429,8 @@ const customMap = L.imageOverlay(
     interactive: false
   }
 ).addTo(map);
+
+map.fitBounds(imageBounds);
 
 function getFilteredPlaces() {
   return places.filter(p => 
