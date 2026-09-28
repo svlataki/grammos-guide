@@ -429,29 +429,30 @@ const center = [
   (20.2000 + 22.0000) / 2
 ];
 
-// FIX 3: Explicit zoom property added
-// const map = L.map('map-container', {
-//   center: center,
-//   zoom: 10,
-//   maxBounds: imageBounds,
-//   maxBoundsViscosity: 1.0,
-//   maxZoom: 19,
-//   minZoom: 9,
-//   zoomControl: false
-// });
-
 const map = L.map('map-container', {
   maxBounds: imageBounds,
   maxBoundsViscosity: 1.0, // Hard-locks panning (no elasticity)
   zoomControl: false
 });
 
-// Fit the map view exactly within the image bounds
-map.fitBounds(imageBounds);
+function expandBounds(bounds, percentage) {
+  const [[south, west], [north, east]] = bounds;
+
+  const latPadding = (north - south) * percentage;
+  const lngPadding = (east - west) * percentage;
+
+  return [
+    [south - latPadding, west - lngPadding],
+    [north + latPadding, east + lngPadding]
+  ];
+}
+const expandedBounds = expandBounds(imageBounds, 0.35);
+
+map.fitBounds(expandedBounds);
 
 // Lock the minimum zoom level to current fitted view 
 // (Prevents zooming out past the image dimensions)
-const minZoomLevel = map.getBoundsZoom(imageBounds, true);
+const minZoomLevel = map.getBoundsZoom(expandedBounds, true);
 map.setMinZoom(minZoomLevel);
 map.setMaxZoom(19);
 
