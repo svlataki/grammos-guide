@@ -328,6 +328,36 @@ html, body {
     overflow: visible;
   }
 }
+#locationButton {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+
+  width: 46px;
+  height: 46px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+
+  font-size: 22px;
+  cursor: pointer;
+
+  z-index: 1000;
+}
+
+#locationButton:active {
+  transform: scale(0.95);
+}
+
+.location-accuracy {
+  fill: #4285f4;
+  fill-opacity: 0.12;
+  stroke: #4285f4;
+  stroke-opacity: 0.35;
+}
 </style>
 </head>
 <body>
@@ -351,7 +381,15 @@ html, body {
   </aside>
 
   <main class="map">
-    <div id="map-container"></div>
+    <div id="map-container">
+    <button
+      id="locationButton"
+      onclick="locateUser()"
+      title="Η τοποθεσία μου"
+    >
+      📍
+    </button>
+  </div>
     <div class="map-vignette"></div>
 
     <div class="controls">
@@ -406,8 +444,79 @@ const center = [
 
 const map = L.map('map-container', {
   center: center,
-  zoom: 20,
+  zoom: 11.5,
   zoomControl: false
+});
+
+let userLocationMarker = null;
+let userLocationAccuracy = null;
+
+function locateUser() {
+  map.locate({
+    setView: false,
+    enableHighAccuracy: true
+  });
+}
+
+map.on('locationfound', function(e) {
+
+  // Remove previous marker/circle
+  if (userLocationMarker) {
+    map.removeLayer(userLocationMarker);
+  }
+
+  if (userLocationAccuracy) {
+    map.removeLayer(userLocationAccuracy);
+  }
+
+  // Accuracy circle
+  userLocationAccuracy = L.circle(e.latlng, {
+    radius: e.accuracy,
+    className: 'location-accuracy'
+  }).addTo(map);
+
+  // Your location marker
+  userLocationMarker = L.circleMarker(e.latlng, {
+    radius: 8,
+    className: 'user-location-marker'
+  })
+    .addTo(map)
+    .bindPopup('📍 Η τοποθεσία μου');
+
+});
+
+function locateUser() {
+  map.locate({
+    setView: false,
+    enableHighAccuracy: true
+  });
+}
+
+map.on('locationfound', function(e) {
+
+  if (userLocationMarker) {
+    map.removeLayer(userLocationMarker);
+  }
+
+  if (userLocationAccuracy) {
+    map.removeLayer(userLocationAccuracy);
+  }
+
+  userLocationAccuracy = L.circle(e.latlng, {
+    radius: e.accuracy,
+    className: 'location-accuracy'
+  }).addTo(map);
+
+  userLocationMarker = L.marker(e.latlng, {
+    icon: userIcon,
+    zIndexOffset: 1000
+  })
+  .addTo(map)
+  .bindPopup('🐕 Η τοποθεσία μου');
+});
+
+map.on('locationerror', function(e) {
+  alert('Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σας.');
 });
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -416,13 +525,13 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 const imageBounds = [
-  [40.0945, 20.6524], // South-West 
-  [40.8284, 21.5868]  // North-East
+  [39.9000, 20.2000], // South-West 
+  [41.0000, 22.0000]  // North-East
 ];
 
 
 const customMap = L.imageOverlay(
-  'images/grammos-custom-map.png',
+  'images/map2.0.png',
   imageBounds,
   {
     opacity: 0.85,
