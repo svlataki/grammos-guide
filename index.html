@@ -369,19 +369,9 @@ html, body {
 
 <!-- Leaflet JS Library -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+<script src="places.js"></script>
 <script>
-const places = [
-  {id:1, day:1, cat:'Ιστορία', icon:'🏛️', name:'Πάρκο Εθνικής Συμφιλίωσης', lat:40.365, lon:20.775, desc:'Στάση ιστορίας στην περιοχή Λιβάδια Κοτύλης, ανάμεσα σε πυκνά δάση.'},
-  {id:2, day:1, cat:'Πεζοπορία', icon:'🥾', name:'Πύργος Κοτύλης', lat:40.352, lon:20.783, desc:'Δημοσιευμένη μονοπατική διαδρομή περίπου 1,95 km / 1 ώρα με πανοραμική θέα.'},
-  {id:3, day:1, cat:'Φαγητό', icon:'🍗', name:'Νεστόριο', lat:40.410, lon:20.940, desc:'Παραδοσιακό χωριό, βάση για ανεφοδιασμό και τοπικές γεύσεις.'},
-  {id:4, day:2, cat:'Πεζοπορία', icon:'🥾', name:'Γράμμοστα', lat:40.340, lon:20.820, desc:'Ιστορικός οικισμός & αφετηρία για την αλπική λίμνη Γκιστόβα και την κορυφή 2520.'},
-  {id:5, day:2, cat:'Πεζοπορία', icon:'🏔️', name:'Λίμνη Γκιστόβα', lat:40.330, lon:20.800, desc:'Η υψηλότερη αλπική λίμνη της Ελλάδας (~2.350m). Μυθικό τοπίο.'},
-  {id:6, day:3, cat:'Κορυφή', icon:'👑', name:'Τσούκα Πέτσικ / 2520', lat:40.325, lon:20.770, desc:'Η επιβλητική ψηλότερη κορυφή του ορεινού όγκου του Γράμμου.'},
-  {id:7, day:4, cat:'Πεζοπορία', icon:'🌲', name:'Αρένες / Μουτσάλια', lat:40.360, lon:20.700, desc:'Μαγευτική αλπική λίμνη περιτριγυρισμένη από υπεραιωνόβια δάση οξιάς.'},
-  {id:8, day:4, cat:'Διαμονή', icon:'🏰', name:'Γράμος', lat:40.342, lon:20.823, desc:'Προτεινόμενο ορεινό σημείο διαμονής & ξεκούρασης.'}
-];
-
+  
 let currentDay = 0;
 let currentCat = 'Όλα';
 let markersGroup = [];
@@ -409,8 +399,13 @@ function createPinIcon(color, icon) {
   });
 }
 
+const center = [
+  (40.8284 + 40.0945) / 2,
+  (20.6524 + 21.5868) / 2
+];
+
 const map = L.map('map-container', {
-  center: [40.35, 20.80],
+  center: center,
   zoom: 11,
   zoomControl: false
 });
@@ -419,6 +414,25 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map);
+
+const imageBounds = [
+  [40.0945, 20.6524], // South-West 
+  [40.8284, 21.5868]  // North-East
+];
+// const imageBounds = [
+//   [40.0945, 20.6324], // SW — shifted west
+//   [40.8284, 21.5668]  // NE — shifted west
+// ];
+
+
+const customMap = L.imageOverlay(
+  'images/grammos-custom-map.png',
+  imageBounds,
+  {
+    opacity: 0.7,
+    interactive: false
+  }
+).addTo(map);
 
 function getFilteredPlaces() {
   return places.filter(p => 
