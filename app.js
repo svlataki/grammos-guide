@@ -1,6 +1,15 @@
 /* ==========================================
    1. STATE & CONFIGURATION
    ========================================== */
+const CONFIG = {
+  useStaticLocation: true, // Set to false to use real GPS location
+  staticLatLng: [40.5207, 21.2512], // Fixed coordinates inside your map bounds
+  userIconUrl: 'images/user-pin.png', // Path to your custom PNG icon
+  //userIconUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABLSURBVEhL7c0xDQAwDASwX1U3q2B/pAERvB2An3SXZ3s4GxsA2A3A/23O34fB2fE1eI3M2X3A3QfcfcDdB9x9wN0H3H3A3QfcfcDdlySdB4K9S+qTAAAAAElFTkSuQmCC',
+  userIconSize: [50, 50],             // Size of the icon [width, height] in px
+  userIconAnchor: [19, 38]            // Anchor point of the icon [x, y] (bottom-center)
+};
+
 let currentDay = 0;
 let currentCat = 'Όλα';
 let markersGroup = [];
@@ -20,7 +29,6 @@ const imageBounds = [
   [39.9000, 20.2000], // South-West 
   [41.0000, 22.0000]  // North-East
 ];
-
 
 /* ==========================================
    2. MAP INITIALIZATION
@@ -58,7 +66,33 @@ window.addEventListener('resize', () => {
 /* ==========================================
    3. GEOLOCATION HANDLERS
    ========================================== */
+
+/* ==========================================
+   3. GEOLOCATION HANDLERS
+   ========================================== */
+
+// Helper to create the custom PNG icon for the user
+const userCustomIcon = L.icon({
+  iconUrl: CONFIG.userIconUrl,
+  iconSize: CONFIG.userIconSize,
+  iconAnchor: CONFIG.userIconAnchor,
+  popupAnchor: [0, -CONFIG.userIconAnchor[1]]
+});
+
 function locateUser() {
+  // Option 1: Mocked Static Location
+  if (CONFIG.useStaticLocation) {
+    const latlng = L.latLng(CONFIG.staticLatLng);
+
+    // Place or update static marker
+    displayUserLocation(latlng);
+    
+    // Fly to static location
+    map.flyTo(latlng, 13, { duration: 1.2 });
+    return;
+  }
+
+  // Option 2: Actual GPS Location
   map.locate({
     setView: true,
     maxZoom: 14,
@@ -66,21 +100,32 @@ function locateUser() {
   });
 }
 
-map.on('locationfound', function(e) {
+// Function to render/update the user's location marker on the map
+function displayUserLocation(latlng, accuracy = null) {
+  // Clear old location layers if present
   if (userLocationMarker) map.removeLayer(userLocationMarker);
   if (userLocationAccuracy) map.removeLayer(userLocationAccuracy);
 
-  userLocationAccuracy = L.circle(e.latlng, {
-    radius: e.accuracy,
-    className: 'location-accuracy'
-  }).addTo(map);
+  // If real GPS provides accuracy radius, render circle
+  if (accuracy) {
+    userLocationAccuracy = L.circle(latlng, {
+      radius: accuracy,
+      className: 'location-accuracy'
+    }).addTo(map);
+  }
 
-  userLocationMarker = L.circleMarker(e.latlng, {
-    radius: 8,
-    className: 'user-location-marker'
-  })
-  .addTo(map)
-  .bindPopup('📍 Η τοποθεσία μου');
+  // Create custom PNG marker
+  userLocationMarker = L.marker(latlng, {
+    icon: userCustomIcon,
+    zIndexOffset: 10000 // Forces marker to draw above all image overlays
+    })
+    .addTo(map)
+    .bindPopup('📍 Η τοποθεσία μου');
+}
+
+// Leaflet standard handler for real GPS results
+map.on('locationfound', function(e) {
+  displayUserLocation(e.latlng, e.accuracy);
 });
 
 map.on('locationerror', function(e) {
