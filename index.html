@@ -437,9 +437,14 @@ function createPinIcon(color, icon) {
   });
 }
 
+const imageBounds = [
+  [39.9000, 20.2000], // South-West 
+  [41.0000, 22.0000]  // North-East
+];
+
 const center = [
-  (40.8284 + 40.0945) / 2,
-  (20.6524 + 21.5868) / 2
+  (39.9000 + 41.0000) / 2,
+  (20.2000 + 22.000) / 2
 ];
 
 const map = L.map('map-container', {
@@ -447,6 +452,8 @@ const map = L.map('map-container', {
   zoom: 11.5,
   zoomControl: false
 });
+// map.fitBounds(imageBounds);
+// map.setMinZoom(map.getZoom());
 
 let userLocationMarker = null;
 let userLocationAccuracy = null;
@@ -519,18 +526,18 @@ map.on('locationerror', function(e) {
   alert('Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σας.');
 });
 
+// Your "entire world"
+map.setMaxBounds(imageBounds);
+map.options.maxBoundsViscosity = 1.0;
+
+// OSM
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-const imageBounds = [
-  [39.9000, 20.2000], // South-West 
-  [41.0000, 22.0000]  // North-East
-];
-
-
-const customMap = L.imageOverlay(
+// Your image
+L.imageOverlay(
   'images/map2.0.png',
   imageBounds,
   {
@@ -538,6 +545,9 @@ const customMap = L.imageOverlay(
     interactive: false
   }
 ).addTo(map);
+
+// Start with your entire world visible
+map.fitBounds(imageBounds);
 
 
 function getFilteredPlaces() {
