@@ -406,7 +406,7 @@ const center = [
 
 const map = L.map('map-container', {
   center: center,
-  zoom: 11,
+  zoom: 20,
   zoomControl: false
 });
 
@@ -430,7 +430,6 @@ const customMap = L.imageOverlay(
   }
 ).addTo(map);
 
-map.fitBounds(imageBounds);
 
 function getFilteredPlaces() {
   return places.filter(p => 
