@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Grammos Adventure Map</title>
 
-<!-- Leaflet CSS for Reliable Tile Rendering -->
+<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-<!-- Google Fonts: Elegant Fantasy Typography with Full Greek Support -->
+<!-- Google Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700;900&family=Cormorant+Garamond:ital,wght@0,500;0,700;1,600&family=Philosopher:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@ html, body {
   position: relative;
 }
 
-/* Sidebar styling with aged scroll / parchment aesthetic */
+/* Sidebar styling */
 .side {
   background: radial-gradient(circle at center, #f7eed3 0%, #e8d7a7 100%);
   padding: 24px;
@@ -178,16 +178,6 @@ html, body {
   line-height: 1.4;
 }
 
-.note {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin-top: 14px;
-  border-top: 1px dashed var(--border-gold);
-  padding-top: 8px;
-  text-align: center;
-}
-
 /* Map viewport & Leaflet styling */
 .map {
   position: relative;
@@ -199,7 +189,7 @@ html, body {
 #map-container {
   width: 100%;
   height: 100%;
-  background-color: #e2d3ab; /* Fallback Parchment Color */
+  background-color: #e2d3ab;
 }
 
 /* Sepia/Parchment Filter applied directly to Map Tiles */
@@ -207,7 +197,7 @@ html, body {
   filter: sepia(0.6) contrast(1.1) brightness(0.95) hue-rotate(-10deg);
 }
 
-/* Aged Vignette Overlay Frame */
+/* Vignette Overlay */
 .map-vignette {
   position: absolute;
   inset: 0;
@@ -250,6 +240,7 @@ html, body {
   color: #fff;
 }
 
+/* FIX 2: Fixed multi-line string in CSS calc() */
 .info-card {
   position: absolute;
   right: 20px;
@@ -292,59 +283,18 @@ html, body {
   border: none;
 }
 
-@media (max-width: 800px) {
-  /* Allow the app to scroll naturally on mobile */
-  html, body {
-    overflow: auto !important;
-  }
-
-  .app {
-    grid-template-columns: 1fr;
-    grid-template-rows: 350px auto; /* Set fixed height for map, auto height for sidebar */
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-
-  /* Keep map fixed at top */
-  .map { 
-    order: 1; 
-    height: 350px; 
-  }
-
-  /* Place sidebar below map and let content scroll */
-  .side { 
-    order: 2; 
-    height: auto;
-    overflow: visible;
-    padding: 16px;
-  }
-
-  /* Ensure card container expands properly on small screens */
-  .cards-container {
-    flex: none;
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
-}
 #locationButton {
   position: absolute;
   right: 20px;
   bottom: 20px;
-
   width: 46px;
   height: 46px;
-
   border: none;
   border-radius: 50%;
-
   background: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-
   font-size: 22px;
   cursor: pointer;
-
   z-index: 1000;
 }
 
@@ -357,6 +307,46 @@ html, body {
   fill-opacity: 0.12;
   stroke: #4285f4;
   stroke-opacity: 0.35;
+}
+
+.user-location-marker {
+  fill: #4285f4;
+  fill-opacity: 1;
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+@media (max-width: 800px) {
+  html, body {
+    overflow: auto !important;
+  }
+
+  .app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 350px auto;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .map { 
+    order: 1; 
+    height: 350px; 
+  }
+
+  .side { 
+    order: 2; 
+    height: auto;
+    overflow: visible;
+    padding: 16px;
+  }
+
+  .cards-container {
+    flex: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 }
 </style>
 </head>
@@ -377,19 +367,11 @@ html, body {
 
     <div class="section-label">Σημεία Ενδιαφέροντος</div>
     <div id="cards" class="cards-container"></div>
-
   </aside>
 
   <main class="map">
-    <div id="map-container">
-    <button
-      id="locationButton"
-      onclick="locateUser()"
-      title="Η τοποθεσία μου"
-    >
-      📍
-    </button>
-  </div>
+    <div id="map-container"></div>
+    <button id="locationButton" onclick="locateUser()" title="Η τοποθεσία μου">📍</button>
     <div class="map-vignette"></div>
 
     <div class="controls">
@@ -444,100 +426,43 @@ const imageBounds = [
 
 const center = [
   (39.9000 + 41.0000) / 2,
-  (20.2000 + 22.000) / 2
+  (20.2000 + 22.0000) / 2
 ];
 
+// FIX 3: Explicit zoom property added
+// const map = L.map('map-container', {
+//   center: center,
+//   zoom: 10,
+//   maxBounds: imageBounds,
+//   maxBoundsViscosity: 1.0,
+//   maxZoom: 19,
+//   minZoom: 9,
+//   zoomControl: false
+// });
+
 const map = L.map('map-container', {
-  center: center,
-  zoom: 11.5,
+  maxBounds: imageBounds,
+  maxBoundsViscosity: 1.0, // Hard-locks panning (no elasticity)
   zoomControl: false
 });
-// map.fitBounds(imageBounds);
-// map.setMinZoom(map.getZoom());
 
-let userLocationMarker = null;
-let userLocationAccuracy = null;
+// Fit the map view exactly within the image bounds
+map.fitBounds(imageBounds);
 
-function locateUser() {
-  map.locate({
-    setView: false,
-    enableHighAccuracy: true
-  });
-}
+// Lock the minimum zoom level to current fitted view 
+// (Prevents zooming out past the image dimensions)
+const minZoomLevel = map.getBoundsZoom(imageBounds, true);
+map.setMinZoom(minZoomLevel);
+map.setMaxZoom(19);
 
-map.on('locationfound', function(e) {
-
-  // Remove previous marker/circle
-  if (userLocationMarker) {
-    map.removeLayer(userLocationMarker);
-  }
-
-  if (userLocationAccuracy) {
-    map.removeLayer(userLocationAccuracy);
-  }
-
-  // Accuracy circle
-  userLocationAccuracy = L.circle(e.latlng, {
-    radius: e.accuracy,
-    className: 'location-accuracy'
-  }).addTo(map);
-
-  // Your location marker
-  userLocationMarker = L.circleMarker(e.latlng, {
-    radius: 8,
-    className: 'user-location-marker'
-  })
-    .addTo(map)
-    .bindPopup('📍 Η τοποθεσία μου');
-
-});
-
-function locateUser() {
-  map.locate({
-    setView: false,
-    enableHighAccuracy: true
-  });
-}
-
-map.on('locationfound', function(e) {
-
-  if (userLocationMarker) {
-    map.removeLayer(userLocationMarker);
-  }
-
-  if (userLocationAccuracy) {
-    map.removeLayer(userLocationAccuracy);
-  }
-
-  userLocationAccuracy = L.circle(e.latlng, {
-    radius: e.accuracy,
-    className: 'location-accuracy'
-  }).addTo(map);
-
-  userLocationMarker = L.marker(e.latlng, {
-    icon: userIcon,
-    zIndexOffset: 1000
-  })
-  .addTo(map)
-  .bindPopup('🐕 Η τοποθεσία μου');
-});
-
-map.on('locationerror', function(e) {
-  alert('Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σας.');
-});
-
-// Your "entire world"
-map.setMaxBounds(imageBounds);
-map.options.maxBoundsViscosity = 1.0;
-
-// OSM
+// Add standard tile layer
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors'
+  maxZoom: 20,
+  attribution: '&copy; OpenStreetMap'
 }).addTo(map);
 
-// Your image
-L.imageOverlay(
+// Add image overlay
+const customMap = L.imageOverlay(
   'images/map2.0.png',
   imageBounds,
   {
@@ -546,11 +471,53 @@ L.imageOverlay(
   }
 ).addTo(map);
 
-// Start with your entire world visible
-map.fitBounds(imageBounds);
+// Adjust minimum zoom dynamically if window/screen size resizes
+window.addEventListener('resize', () => {
+  const updatedMinZoom = map.getBoundsZoom(imageBounds, true);
+  map.setMinZoom(updatedMinZoom);
+});
 
+function resetView() {
+  map.fitBounds(imageBounds);
+  closeInfo();
+}
+
+// Location Handling
+let userLocationMarker = null;
+let userLocationAccuracy = null;
+
+function locateUser() {
+  map.locate({
+    setView: true,
+    maxZoom: 14,
+    enableHighAccuracy: true
+  });
+}
+
+// FIX 4: Single locationfound handler using standard L.circleMarker
+map.on('locationfound', function(e) {
+  if (userLocationMarker) map.removeLayer(userLocationMarker);
+  if (userLocationAccuracy) map.removeLayer(userLocationAccuracy);
+
+  userLocationAccuracy = L.circle(e.latlng, {
+    radius: e.accuracy,
+    className: 'location-accuracy'
+  }).addTo(map);
+
+  userLocationMarker = L.circleMarker(e.latlng, {
+    radius: 8,
+    className: 'user-location-marker'
+  })
+  .addTo(map)
+  .bindPopup('📍 Η τοποθεσία μου');
+});
+
+map.on('locationerror', function(e) {
+  alert('Δεν ήταν δυνατός ο εντοπισμός της τοποθεσίας σας.');
+});
 
 function getFilteredPlaces() {
+  if (typeof places === 'undefined') return [];
   return places.filter(p => 
     (currentDay === 0 || p.day === currentDay) &&
     (currentCat === 'Όλα' || p.cat === currentCat)
@@ -622,6 +589,7 @@ function setCategory(c) {
 }
 
 function focusLocation(id) {
+  if (typeof places === 'undefined') return;
   const p = places.find(x => x.id === id);
   if (!p) return;
 
@@ -653,7 +621,7 @@ function zoomBy(delta) {
 }
 
 function resetView() {
-  map.flyTo([40.35, 20.80], 11);
+  map.flyTo(center, 10);
   closeInfo();
 }
 
